@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ACTIVIDAD EN CLASE 1</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0a0a1a;
+      font-family: sans-serif;
+    }
+
+    h2 {
+      color: #AFA9EC;
+      font-weight: 500;
+      font-size: 15px;
+      letter-spacing: 0.15em;
+      margin: 0 0 4px;
+      text-transform: uppercase;
+    }
+
+    h3 {
+      color: rgba(255,255,255,0.4);
+      font-weight: 400;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      margin: 0 0 20px;
+      text-transform: uppercase;
+    }
+
+    canvas {
+      border-radius: 16px;
+      border: 1px solid rgba(175,169,236,0.25);
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Actividad en Clase 1</h2>
+<h3>Cuadrado y Triángulo</h3>
+
+<canvas id="myCanvas" width="900" height="500"></canvas>
+
+<script>
+  const canvas = document.getElementById("myCanvas");
+  const ctx    = canvas.getContext("2d");
+
+  // ── Fondo ──────────────────────────────────────────────
+  ctx.fillStyle = "#0d0d20";
+  ctx.fillRect(0, 0, 900, 500);
+
+  // ── Grid sutil ─────────────────────────────────────────
+  ctx.strokeStyle = "rgba(255,255,255,0.04)";
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= 900; x += 45) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 500); ctx.stroke();
+  }
+  for (let y = 0; y <= 500; y += 45) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(900, y); ctx.stroke();
+  }
+
+  // ══════════════════════════════════════════════════════
+  //  PANEL IZQUIERDO
+  // ══════════════════════════════════════════════════════
+
+  // Marco con esquinas redondeadas
+  ctx.strokeStyle = "rgba(175,169,236,0.5)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(20, 50, 380, 400, 12);
+  ctx.stroke();
+
+  // Etiqueta panel
+  ctx.fillStyle = "rgba(175,169,236,0.7)";
+  ctx.font = "11px sans-serif";
+  ctx.fillText("Panel A", 34, 44);
+
+  // — Rectángulo relleno —
+  const gradRect = ctx.createLinearGradient(60, 100, 60, 280);
+  gradRect.addColorStop(0, "#7F77DD");
+  gradRect.addColorStop(1, "#534AB7");
+
+  ctx.beginPath();
+  ctx.roundRect(60, 120, 120, 160, 8);
+  ctx.fillStyle = gradRect;
+  ctx.fill();
+  ctx.strokeStyle = "#AFA9EC";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Brillo interior rectángulo
+  ctx.beginPath();
+  ctx.roundRect(64, 124, 112, 30, 6);
+  ctx.fillStyle = "rgba(255,255,255,0.12)";
+  ctx.fill();
+
+  // Etiqueta rectángulo
+  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  ctx.font = "11px sans-serif";
+  ctx.fillText("rect", 108, 310);
+
+  // — Triángulo izquierdo —
+  const gradTri1 = ctx.createLinearGradient(250, 110, 250, 230);
+  gradTri1.addColorStop(0, "#5DCAA5");
+  gradTri1.addColorStop(1, "#0F6E56");
+
+  ctx.beginPath();
+  ctx.moveTo(270, 120);
+  ctx.lineTo(340, 230);
+  ctx.lineTo(200, 230);
+  ctx.closePath();
+  ctx.fillStyle = gradTri1;
+  ctx.fill();
+  ctx.strokeStyle = "#9FE1CB";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Brillo triángulo izq
+  ctx.beginPath();
+  ctx.moveTo(270, 124);
+  ctx.lineTo(310, 165);
+  ctx.lineTo(230, 165);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(255,255,255,0.1)";
+  ctx.fill();
+
+  // Etiqueta triángulo
+  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  ctx.font = "11px sans-serif";
+  ctx.fillText("triángulo", 252, 252);
+
+  // ══════════════════════════════════════════════════════
+  //  PANEL DERECHO
+  // ══════════════════════════════════════════════════════
+
+  // Marco con esquinas redondeadas
+  ctx.strokeStyle = "rgba(93,202,165,0.45)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(500, 50, 380, 400, 12);
+  ctx.stroke();
+
+  // Etiqueta panel
+  ctx.fillStyle = "rgba(93,202,165,0.7)";
+  ctx.font = "11px sans-serif";
+  ctx.fillText("Panel B", 514, 44);
+
+  // Línea divisoria central
+  ctx.beginPath();
+  ctx.setLineDash([6, 4]);
+  ctx.moveTo(516, 255);
+  ctx.lineTo(874, 255);
+  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // — Cuadrado superior (panel derecho) —
+  const gradSq = ctx.createLinearGradient(590, 100, 590, 210);
+  gradSq.addColorStop(0, "#9b8fff");
+  gradSq.addColorStop(1, "#534AB7");
+
+  ctx.beginPath();
+  ctx.roundRect(610, 110, 120, 120, 8);
+  ctx.fillStyle = gradSq;
+  ctx.fill();
+  ctx.strokeStyle = "#AFA9EC";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Brillo cuadrado
+  ctx.beginPath();
+  ctx.roundRect(614, 114, 112, 28, 6);
+  ctx.fillStyle = "rgba(255,255,255,0.15)";
+  ctx.fill();
+
+  // Etiqueta cuadrado
+  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  ctx.font = "11px sans-serif";
+  ctx.fillText("cuadrado", 648, 248);
+
+  // — Triángulo inferior (panel derecho) —
+  const gradTri2 = ctx.createLinearGradient(670, 275, 670, 400);
+  gradTri2.addColorStop(0, "#5DCAA5");
+  gradTri2.addColorStop(1, "#085041");
+
+  ctx.beginPath();
+  ctx.moveTo(670, 278);
+  ctx.lineTo(750, 400);
+  ctx.lineTo(590, 400);
+  ctx.closePath();
+  ctx.fillStyle = gradTri2;
+  ctx.fill();
+  ctx.strokeStyle = "#9FE1CB";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Brillo triángulo der
+  ctx.beginPath();
+  ctx.moveTo(670, 282);
+  ctx.lineTo(720, 340);
+  ctx.lineTo(620, 340);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(255,255,255,0.09)";
+  ctx.fill();
+
+  // Etiqueta triángulo der
+  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  ctx.font = "11px sans-serif";
+  ctx.fillText("triángulo", 648, 418);
+
+  // ── Separador central vertical ──────────────────────────
+  ctx.beginPath();
+  ctx.setLineDash([4, 6]);
+  ctx.moveTo(450, 60);
+  ctx.lineTo(450, 440);
+  ctx.strokeStyle = "rgba(255,255,255,0.08)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+</script>
+</body>
+</html>

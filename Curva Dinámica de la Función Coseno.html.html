@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Función Coseno</title>
+<style>
+  body {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #0a0a1a;
+    font-family: sans-serif;
+    color: rgba(255,255,255,0.8);
+  }
+
+  h2 {
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    color: #AFA9EC;
+  }
+
+  canvas {
+    border-radius: 12px;
+    border: 1px solid rgba(175, 169, 236, 0.3);
+    display: block;
+  }
+
+  #ui {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-top: 16px;
+    background: rgba(255,255,255,0.06);
+    padding: 10px 24px;
+    border-radius: 20px;
+  }
+
+  #ui label { font-size: 13px; color: rgba(255,255,255,0.5); }
+  #ui span  { font-size: 13px; color: rgba(255,255,255,0.9); min-width: 28px; }
+
+  button {
+    font-size: 12px;
+    padding: 6px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(175,169,236,0.5);
+    background: transparent;
+    color: #AFA9EC;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  button:hover { background: rgba(175,169,236,0.15); }
+</style>
+</head>
+<body>
+
+<h2>Curva Dinámica &mdash; y = cos(x + t)</h2>
+<canvas id="canvas" width="620" height="380"></canvas>
+
+<div id="ui">
+  <label>Velocidad</label>
+  <input type="range" min="1" max="20" value="5" id="vel">
+  <span id="vel-out">5</span>
+
+  <label>Amplitud</label>
+  <input type="range" min="20" max="160" value="100" id="amp">
+  <span id="amp-out">100</span>
+
+  <button id="btnPause">Pausar</button>
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx    = canvas.getContext("2d");
+
+const W = canvas.width;
+const H = canvas.height;
+const CX = W / 2;
+const CY = H / 2;
+
+let t         = 0;
+let pausado   = false;
+let velocidad = 0.05;
+let amplitud  = 100;
+
+// Controles
+document.getElementById("vel").addEventListener("input", e => {
+  velocidad = parseFloat(e.target.value) * 0.01;
+  document.getElementById("vel-out").textContent = e.target.value;
+});
+
+document.getElementById("amp").addEventListener("input", e => {
+  amplitud = parseFloat(e.target.value);
+  document.getElementById("amp-out").textContent = e.target.value;
+});
+
+document.getElementById("btnPause").addEventListener("click", function() {
+  pausado = !pausado;
+  this.textContent = pausado ? "Reanudar" : "Pausar";
+});
+
+function dibujar() {
+  // Fondo con rastro suave
+  ctx.fillStyle = "rgba(10, 10, 26, 0.35)";
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid de referencia
+  ctx.strokeStyle = "rgba(255,255,255,0.05)";
+  ctx.lineWidth = 1;
+  for (let gx = 0; gx <= W; gx += 50) {
+    ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke();
+  }
+  for (let gy = 0; gy <= H; gy += 50) {
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+  }
+
+  // Ejes
+  ctx.strokeStyle = "rgba(175, 169, 236, 0.5)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, CY); ctx.lineTo(W, CY);  // eje X
+  ctx.moveTo(CX, 0); ctx.lineTo(CX, H);  // eje Y
+  ctx.stroke();
+
+  // Etiquetas ejes
+  ctx.fillStyle = "rgba(175,169,236,0.6)";
+  ctx.font = "11px sans-serif";
+  ctx.fillText("x", W - 14, CY - 8);
+  ctx.fillText("y", CX + 8, 14);
+  ctx.fillText("0", CX + 6, CY - 6);
+
+  // Curva coseno con gradiente de color
+  for (let pass = 0; pass < 2; pass++) {
+    ctx.beginPath();
+    for (let x = 0; x < W; x++) {
+      const y = amplitud * Math.cos((x * 0.02) + t);
+      if (x === 0) ctx.moveTo(x, CY - y);
+      else         ctx.lineTo(x, CY - y);
+    }
+
+    if (pass === 0) {
+      // Sombra/brillo por debajo
+      ctx.strokeStyle = "rgba(93, 202, 165, 0.25)";
+      ctx.lineWidth   = 6;
+    } else {
+      // Línea principal
+      const grad = ctx.createLinearGradient(0, 0, W, 0);
+      grad.addColorStop(0,    "#534AB7");
+      grad.addColorStop(0.5,  "#5DCAA5");
+      grad.addColorStop(1,    "#534AB7");
+      ctx.strokeStyle = grad;
+      ctx.lineWidth   = 2.5;
+    }
+    ctx.stroke();
+  }
+
+  // Punto móvil en x = CX
+  const yPunto = amplitud * Math.cos(t);
+  ctx.beginPath();
+  ctx.arc(CX, CY - yPunto, 6, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  ctx.strokeStyle = "#5DCAA5";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Valor actual
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.font = "12px sans-serif";
+  ctx.fillText(`cos(t) = ${Math.cos(t).toFixed(3)}`, CX + 12, CY - yPunto - 10);
+
+  if (!pausado) t += velocidad;
+
+  requestAnimationFrame(dibujar);
+}
+
+dibujar();
+</script>
+</body>
+</html>
+
+setInterval(dibujar, 50);
+</script>
+
+</body>
+</html>

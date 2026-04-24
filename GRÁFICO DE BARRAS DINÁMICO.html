@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Gráfico de Barras Dinámico</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a1a;
+    font-family: sans-serif;
+  }
+
+  h2 {
+    color: #AFA9EC;
+    font-weight: 400;
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 0 0 20px;
+  }
+
+  #panel {
+    background: #0d0d20;
+    border: 1px solid rgba(175,169,236,0.2);
+    border-radius: 16px;
+    padding: 24px 24px 16px;
+    width: 520px;
+  }
+
+  /* Grid de referencia horizontal */
+  #grid {
+    position: relative;
+    height: 300px;
+    margin-bottom: 8px;
+    border-left: 1px solid rgba(175,169,236,0.3);
+    border-bottom: 1px solid rgba(175,169,236,0.3);
+  }
+
+  .linea-grid {
+    position: absolute;
+    left: 0; right: 0;
+    border-top: 1px dashed rgba(255,255,255,0.06);
+    font-size: 10px;
+    color: rgba(255,255,255,0.2);
+    padding-left: 4px;
+  }
+
+  #contenedor {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    height: 100%;
+    padding: 0 12px;
+    gap: 10px;
+  }
+
+  .barra-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+    height: 100%;
+    gap: 6px;
+  }
+
+  .valor {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    transition: all 0.6s ease;
+  }
+
+  .barra {
+    width: 100%;
+    border-radius: 6px 6px 0 0;
+    transition: height 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Brillo interior */
+  .barra::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 40%;
+    background: rgba(255,255,255,0.12);
+    border-radius: 6px 6px 0 0;
+  }
+
+  .etiqueta {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  #ui {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  button {
+    font-size: 12px;
+    padding: 6px 18px;
+    border-radius: 14px;
+    border: 1px solid rgba(175,169,236,0.4);
+    background: transparent;
+    color: #AFA9EC;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  button:hover { background: rgba(175,169,236,0.12); }
+
+  #ui label { font-size: 12px; color: rgba(255,255,255,0.4); }
+  #ui span  { font-size: 12px; color: rgba(255,255,255,0.8); min-width: 20px; }
+
+  #info {
+    font-size: 11px;
+    color: rgba(255,255,255,0.2);
+    text-align: center;
+    margin-top: 10px;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<h2>Gráfico de Barras Dinámico</h2>
+
+<div id="panel">
+  <div id="grid"></div>
+
+  <div id="etiquetas" style="display:flex; justify-content:space-around; padding: 0 12px;">
+  </div>
+
+  <div id="ui">
+    <label>Intervalo</label>
+    <input type="range" min="3" max="30" value="10" id="vel">
+    <span id="vel-out">1.0s</span>
+    <button id="btnPause">Pausar</button>
+    <button id="btnShuffle">Barajar ahora</button>
+  </div>
+
+  <div id="info">actualizando cada <span id="info-vel">1.0</span>s</div>
+</div>
+
+<script>
+  const colores = [
+    { from: "#7F77DD", to: "#534AB7" },
+    { from: "#5DCAA5", to: "#0F6E56" },
+    { from: "#9b8fff", to: "#7F77DD" },
+    { from: "#9FE1CB", to: "#1D9E75" },
+    { from: "#AFA9EC", to: "#534AB7" },
+  ];
+
+  const nombres = ["Ene", "Feb", "Mar", "Abr", "May"];
+  const MAX_H   = 280;
+
+  // Líneas de grid
+  const grid = document.getElementById("grid");
+  [100, 75, 50, 25].forEach(pct => {
+    const l = document.createElement("div");
+    l.className = "linea-grid";
+    l.style.bottom = (pct / 100 * MAX_H) + "px";
+    l.textContent = pct;
+    grid.appendChild(l);
+  });
+
+  // Contenedor barras dentro del grid
+  const contenedor = document.createElement("div");
+  contenedor.id = "contenedor";
+  grid.appendChild(contenedor);
+
+  // Etiquetas debajo
+  const etiquetasDiv = document.getElementById("etiquetas");
+
+  const barras = [];
+  const valores = [];
+  const valoresDiv = [];
+
+  for (let i = 0; i < 5; i++) {
+    const wrap = document.createElement("div");
+    wrap.className = "barra-wrap";
+
+    const val = document.createElement("div");
+    val.className = "valor";
+    val.textContent = "--";
+    valoresDiv.push(val);
+
+    const barra = document.createElement("div");
+    barra.className = "barra";
+    const svg = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3C/svg%3E")`;
+    barra.style.background = `linear-gradient(to top, ${colores[i].to}, ${colores[i].from})`;
+    barra.style.height = "0px";
+    barras.push(barra);
+
+    wrap.appendChild(val);
+    wrap.appendChild(barra);
+    contenedor.appendChild(wrap);
+
+    // etiqueta
+    const et = document.createElement("div");
+    et.className = "etiqueta";
+    et.textContent = nombres[i];
+    et.style.flex = "1";
+    et.style.textAlign = "center";
+    etiquetasDiv.appendChild(et);
+  }
+
+  function actualizar() {
+    barras.forEach((barra, i) => {
+      const v = Math.floor(Math.random() * 90) + 10;
+      valores[i] = v;
+      barra.style.height = (v / 100 * MAX_H) + "px";
+      valoresDiv[i].textContent = v;
+    });
+  }
+
+  // Control intervalo
+  let intervalo;
+  let ms = 1000;
+  let pausado = false;
+
+  function reiniciar() {
+    clearInterval(intervalo);
+    if (!pausado) intervalo = setInterval(actualizar, ms);
+  }
+
+  document.getElementById("vel").addEventListener("input", e => {
+    ms = parseFloat(e.target.value) * 100;
+    const seg = (ms / 1000).toFixed(1);
+    document.getElementById("vel-out").textContent = seg + "s";
+    document.getElementById("info-vel").textContent = seg;
+    reiniciar();
+  });
+
+  document.getElementById("btnPause").addEventListener("click", function() {
+    pausado = !pausado;
+    this.textContent = pausado ? "Reanudar" : "Pausar";
+    reiniciar();
+  });
+
+  document.getElementById("btnShuffle").addEventListener("click", actualizar);
+
+  actualizar();
+  reiniciar();
+</script>
+</body>
+</html>

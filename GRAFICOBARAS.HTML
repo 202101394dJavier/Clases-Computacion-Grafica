@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Gráfico de Barras</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a1a;
+    font-family: sans-serif;
+  }
+
+  h2 {
+    color: #AFA9EC;
+    font-weight: 400;
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 0 0 16px;
+  }
+
+  canvas {
+    border-radius: 14px;
+    border: 1px solid rgba(175,169,236,0.25);
+    display: block;
+  }
+
+  #ui {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-top: 14px;
+    background: rgba(255,255,255,0.06);
+    padding: 10px 22px;
+    border-radius: 20px;
+  }
+
+  #ui label { font-size: 12px; color: rgba(255,255,255,0.4); }
+
+  button {
+    font-size: 12px;
+    padding: 5px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(175,169,236,0.4);
+    background: transparent;
+    color: #AFA9EC;
+    cursor: pointer;
+  }
+  button:hover { background: rgba(175,169,236,0.12); }
+</style>
+</head>
+<body>
+
+<h2>Gráfico de Barras</h2>
+<canvas id="myCanvas" width="560" height="420"></canvas>
+
+<div id="ui">
+  <label>Haz clic en una barra para ver su valor</label>
+  <button id="btnRandom">Aleatorizar</button>
+</div>
+
+<script>
+  const canvas = document.getElementById("myCanvas");
+  const ctx    = canvas.getContext("2d");
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const NOMBRES  = ["Ene", "Feb", "Mar", "Abr", "May"];
+  const COLORES  = [
+    { from: "#7F77DD", to: "#534AB7" },
+    { from: "#5DCAA5", to: "#0F6E56" },
+    { from: "#9b8fff", to: "#7F77DD" },
+    { from: "#9FE1CB", to: "#1D9E75" },
+    { from: "#AFA9EC", to: "#534AB7" },
+  ];
+
+  let datos     = [50, 60, 70, 90, 80];
+  let seleccion = -1;
+
+  const PAD_L  = 55;
+  const PAD_R  = 30;
+  const PAD_T  = 30;
+  const PAD_B  = 55;
+  const GRAF_W = W - PAD_L - PAD_R;
+  const GRAF_H = H - PAD_T - PAD_B;
+  const BAR_W  = 56;
+  const MAX_V  = 100;
+
+  function barX(i) {
+    const spacing = GRAF_W / datos.length;
+    return PAD_L + spacing * i + (spacing - BAR_W) / 2;
+  }
+
+  function barH(v) { return (v / MAX_V) * GRAF_H; }
+  function barY(v) { return PAD_T + GRAF_H - barH(v); }
+
+  function dibujar() {
+    // Fondo
+    ctx.fillStyle = "#0d0d20";
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid horizontal
+    ctx.setLineDash([4, 5]);
+    ctx.lineWidth = 1;
+    [25, 50, 75, 100].forEach(v => {
+      const y = barY(v);
+      ctx.beginPath();
+      ctx.moveTo(PAD_L, y);
+      ctx.lineTo(W - PAD_R, y);
+      ctx.strokeStyle = "rgba(255,255,255,0.07)";
+      ctx.stroke();
+
+      // Etiqueta Y
+      ctx.fillStyle = "rgba(255,255,255,0.25)";
+      ctx.font = "11px sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(v, PAD_L - 8, y + 4);
+    });
+    ctx.setLineDash([]);
+
+    // Línea base
+    ctx.beginPath();
+    ctx.moveTo(PAD_L, PAD_T + GRAF_H);
+    ctx.lineTo(W - PAD_R, PAD_T + GRAF_H);
+    ctx.strokeStyle = "rgba(175,169,236,0.35)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Línea eje Y
+    ctx.beginPath();
+    ctx.moveTo(PAD_L, PAD_T);
+    ctx.lineTo(PAD_L, PAD_T + GRAF_H);
+    ctx.strokeStyle = "rgba(175,169,236,0.35)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Barras
+    datos.forEach((v, i) => {
+      const x  = barX(i);
+      const y  = barY(v);
+      const bh = barH(v);
+      const sel = seleccion === i;
+
+      // Sombra/halo si seleccionado
+      if (sel) {
+        ctx.save();
+        ctx.shadowColor = COLORES[i].from;
+        ctx.shadowBlur  = 18;
+      }
+
+      // Gradiente barra
+      const grad = ctx.createLinearGradient(x, y, x, y + bh);
+      grad.addColorStop(0, COLORES[i].from);
+      grad.addColorStop(1, COLORES[i].to);
+
+      // Barra con esquinas redondeadas arriba
+      ctx.beginPath();
+      ctx.moveTo(x + 6, y);
+      ctx.lineTo(x + BAR_W - 6, y);
+      ctx.quadraticCurveTo(x + BAR_W, y, x + BAR_W, y + 6);
+      ctx.lineTo(x + BAR_W, y + bh);
+      ctx.lineTo(x, y + bh);
+      ctx.lineTo(x, y + 6);
+      ctx.quadraticCurveTo(x, y, x + 6, y);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      if (sel) ctx.restore();
+
+      // Brillo interior
+      ctx.beginPath();
+      ctx.moveTo(x + 6, y + 2);
+      ctx.lineTo(x + BAR_W - 6, y + 2);
+      ctx.quadraticCurveTo(x + BAR_W - 2, y + 2, x + BAR_W - 2, y + 8);
+      ctx.lineTo(x + BAR_W - 2, y + bh * 0.28);
+      ctx.lineTo(x + 2, y + bh * 0.28);
+      ctx.lineTo(x + 2, y + 8);
+      ctx.quadraticCurveTo(x + 2, y + 2, x + 6, y + 2);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(255,255,255,0.13)";
+      ctx.fill();
+
+      // Valor encima
+      ctx.fillStyle = sel ? "#ffffff" : "rgba(255,255,255,0.75)";
+      ctx.font = sel ? "500 13px sans-serif" : "12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(v, x + BAR_W / 2, y - 8);
+
+      // Etiqueta abajo
+      ctx.fillStyle = sel
+        ? COLORES[i].from
+        : "rgba(255,255,255,0.35)";
+      ctx.font = "11px sans-serif";
+      ctx.fillText(NOMBRES[i], x + BAR_W / 2, PAD_T + GRAF_H + 20);
+
+      // Borde si seleccionado
+      if (sel) {
+        ctx.beginPath();
+        ctx.moveTo(x + 6, y);
+        ctx.lineTo(x + BAR_W - 6, y);
+        ctx.quadraticCurveTo(x + BAR_W, y, x + BAR_W, y + 6);
+        ctx.lineTo(x + BAR_W, y + bh);
+        ctx.lineTo(x, y + bh);
+        ctx.lineTo(x, y + 6);
+        ctx.quadraticCurveTo(x, y, x + 6, y);
+        ctx.closePath();
+        ctx.strokeStyle = COLORES[i].from;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    });
+
+    // Tooltip seleccionado
+    if (seleccion >= 0) {
+      const i  = seleccion;
+      const v  = datos[i];
+      const tx = barX(i) + BAR_W / 2;
+      const ty = barY(v) - 32;
+
+      ctx.fillStyle = "rgba(13,13,32,0.92)";
+      ctx.strokeStyle = COLORES[i].from;
+      ctx.lineWidth = 1;
+      const tw = 80;
+      const th = 24;
+      ctx.beginPath();
+      ctx.roundRect(tx - tw/2, ty - th/2, tw, th, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = COLORES[i].from;
+      ctx.font = "500 12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(`${NOMBRES[i]}: ${v}`, tx, ty + 5);
+    }
+  }
+
+  // Click en barra
+  canvas.addEventListener("click", e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (W / rect.width);
+    const my = (e.clientY - rect.top)  * (H / rect.height);
+
+    let hit = -1;
+    datos.forEach((v, i) => {
+      const x  = barX(i);
+      const y  = barY(v);
+      const bh = barH(v);
+      if (mx >= x && mx <= x + BAR_W && my >= y && my <= y + bh) hit = i;
+    });
+    seleccion = hit === seleccion ? -1 : hit;
+    dibujar();
+  });
+
+  // Aleatorizar con animación
+  document.getElementById("btnRandom").addEventListener("click", () => {
+    const objetivo = datos.map(() => Math.floor(Math.random() * 85) + 15);
+    const inicio   = [...datos];
+    const dur = 500;
+    const t0  = performance.now();
+
+    function animar(now) {
+      const prog = Math.min((now - t0) / dur, 1);
+      const ease = 1 - Math.pow(1 - prog, 3);
+      datos = inicio.map((a, i) => Math.round(a + (objetivo[i] - a) * ease));
+      dibujar();
+      if (prog < 1) requestAnimationFrame(animar);
+    }
+    requestAnimationFrame(animar);
+    seleccion = -1;
+  });
+
+  dibujar();
+</script>
+</body>
+</html>

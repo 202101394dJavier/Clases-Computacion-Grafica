@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Transformaciones 3D</title>
+<style>
+body { margin: 0; overflow: hidden; background: #0a0a1a; font-family: sans-serif; }
+
+#hud {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+#titulo {
+  position: fixed;
+  top: 20px;
+  left: 24px;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(175,169,236,0.55);
+  z-index: 10;
+}
+
+.stat {
+  background: rgba(10,10,30,0.75);
+  border: 1px solid rgba(175,169,236,0.2);
+  border-radius: 10px;
+  padding: 7px 16px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  backdrop-filter: blur(6px);
+  min-width: 110px;
+  text-align: center;
+}
+.stat span {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #AFA9EC;
+  margin-top: 2px;
+}
+
+/* Panel de teclas */
+#panel {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  gap: 8px;
+  z-index: 10;
+  background: rgba(10,10,30,0.75);
+  border: 1px solid rgba(175,169,236,0.18);
+  border-radius: 16px;
+  padding: 14px 20px;
+  backdrop-filter: blur(8px);
+}
+
+.grupo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.grupo-titulo {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  margin-bottom: 2px;
+}
+
+.teclas {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.key {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(175,169,236,0.25);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  min-width: 32px;
+  text-align: center;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+.key.activa {
+  background: rgba(127,119,221,0.25);
+  border-color: #7F77DD;
+  color: #ffffff;
+}
+
+.sep {
+  width: 1px;
+  background: rgba(175,169,236,0.12);
+  margin: 0 4px;
+}
+
+#btnReset {
+  font-size: 11px;
+  padding: 5px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(93,202,165,0.4);
+  background: transparent;
+  color: #5DCAA5;
+  cursor: pointer;
+  align-self: center;
+}
+#btnReset:hover { background: rgba(93,202,165,0.12); }
+</style>
+</head>
+<body>
+
+<div id="titulo">Transformaciones 3D</div>
+
+<div id="hud">
+  <div class="stat">Posición X <span id="px">0.00</span></div>
+  <div class="stat">Posición Y <span id="py">0.00</span></div>
+  <div class="stat">Rotación Y <span id="ry">0.00</span></div>
+  <div class="stat">Escala <span id="sc">1.00</span></div>
+</div>
+
+<div id="panel">
+  <div class="grupo">
+    <div class="grupo-titulo">Traslación</div>
+    <div class="teclas">
+      <div class="key" id="k-up">↑</div>
+    </div>
+    <div class="teclas">
+      <div class="key" id="k-left">←</div>
+      <div class="key" id="k-down">↓</div>
+      <div class="key" id="k-right">→</div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="grupo">
+    <div class="grupo-titulo">Rotación</div>
+    <div class="teclas">
+      <div class="key" id="k-q">Q</div>
+      <div class="key" id="k-e">E</div>
+    </div>
+    <div class="teclas">
+      <div class="key" id="k-a">A</div>
+      <div class="key" id="k-d">D</div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="grupo">
+    <div class="grupo-titulo">Escala</div>
+    <div class="teclas">
+      <div class="key" id="k-w">W +</div>
+      <div class="key" id="k-s">S −</div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="grupo">
+    <div class="grupo-titulo">Reset</div>
+    <button id="btnReset">↺ Reset</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── Escena ────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a1a);
+scene.fog = new THREE.FogExp2(0x0a0a1a, 0.06);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 1000);
+camera.position.set(0, 0.5, 6);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+// ── Luces ─────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x222244, 1));
+
+const luz1 = new THREE.PointLight(0x7F77DD, 3, 20);
+luz1.position.set(5, 5, 5);
+luz1.castShadow = true;
+scene.add(luz1);
+
+const luz2 = new THREE.PointLight(0x5DCAA5, 2, 20);
+luz2.position.set(-5, -3, 3);
+scene.add(luz2);
+
+// ── Suelo / grid ──────────────────────────────────────────
+const gridHelper = new THREE.GridHelper(14, 14, 0x2a2a4a, 0x1a1a2e);
+gridHelper.position.y = -2;
+scene.add(gridHelper);
+
+// Plano receptor de sombras
+const suelo = new THREE.Mesh(
+  new THREE.PlaneGeometry(20, 20),
+  new THREE.ShadowMaterial({ opacity: 0.3 })
+);
+suelo.rotation.x = -Math.PI / 2;
+suelo.position.y = -2;
+suelo.receiveShadow = true;
+scene.add(suelo);
+
+// ── Cubo ──────────────────────────────────────────────────
+const geo = new THREE.BoxGeometry(1.3, 1.3, 1.3);
+const mat = new THREE.MeshPhongMaterial({
+  color: 0x7F77DD,
+  emissive: 0x2a1a6e,
+  specular: 0xffffff,
+  shininess: 90,
+});
+const cube = new THREE.Mesh(geo, mat);
+cube.castShadow = true;
+scene.add(cube);
+
+// Aristas
+const aristas = new THREE.LineSegments(
+  new THREE.EdgesGeometry(geo),
+  new THREE.LineBasicMaterial({ color: 0xAFA9EC, transparent: true, opacity: 0.5 })
+);
+cube.add(aristas);
+
+// Sombra proyectada en el suelo (disco)
+const sombra = new THREE.Mesh(
+  new THREE.CircleGeometry(0.7, 32),
+  new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35 })
+);
+sombra.rotation.x = -Math.PI / 2;
+sombra.position.y = -1.99;
+scene.add(sombra);
+
+// ── Estrellas ─────────────────────────────────────────────
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(500 * 3);
+for (let i = 0; i < 500 * 3; i++) starPos[i] = (Math.random() - 0.5) * 80;
+starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
+scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
+  color: 0xffffff, size: 0.07, transparent: true, opacity: 0.5
+})));
+
+// ── Teclado ───────────────────────────────────────────────
+const keys = {};
+const keyMap = {
+  "ArrowUp":    "k-up",
+  "ArrowDown":  "k-down",
+  "ArrowLeft":  "k-left",
+  "ArrowRight": "k-right",
+  "q": "k-q", "Q": "k-q",
+  "e": "k-e", "E": "k-e",
+  "a": "k-a", "A": "k-a",
+  "d": "k-d", "D": "k-d",
+  "w": "k-w", "W": "k-w",
+  "s": "k-s", "S": "k-s",
+};
+
+document.addEventListener("keydown", e => {
+  keys[e.key] = true;
+  const id = keyMap[e.key];
+  if (id) document.getElementById(id)?.classList.add("activa");
+});
+document.addEventListener("keyup", e => {
+  keys[e.key] = false;
+  const id = keyMap[e.key];
+  if (id) document.getElementById(id)?.classList.remove("activa");
+});
+
+// Reset
+document.getElementById("btnReset").addEventListener("click", () => {
+  cube.position.set(0, 0, 0);
+  cube.rotation.set(0, 0, 0);
+  cube.scale.set(1, 1, 1);
+});
+
+// ── HUD ───────────────────────────────────────────────────
+const elPx = document.getElementById("px");
+const elPy = document.getElementById("py");
+const elRy = document.getElementById("ry");
+const elSc = document.getElementById("sc");
+
+// ── Resize ────────────────────────────────────────────────
+window.addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ── Animación ─────────────────────────────────────────────
+let t = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  t += 0.01;
+
+  // Traslación (igual que el original)
+  if (keys["ArrowUp"])    cube.position.y += 0.05;
+  if (keys["ArrowDown"])  cube.position.y -= 0.05;
+  if (keys["ArrowLeft"])  cube.position.x -= 0.05;
+  if (keys["ArrowRight"]) cube.position.x += 0.05;
+
+  // Rotación (original + eje X con A/D)
+  if (keys["q"] || keys["Q"]) cube.rotation.y -= 0.05;
+  if (keys["e"] || keys["E"]) cube.rotation.y += 0.05;
+  if (keys["a"] || keys["A"]) cube.rotation.x -= 0.05;
+  if (keys["d"] || keys["D"]) cube.rotation.x += 0.05;
+
+  // Escala (igual que el original, con límites)
+  if (keys["w"] || keys["W"]) {
+    const s = Math.min(cube.scale.x + 0.01, 3);
+    cube.scale.set(s, s, s);
+  }
+  if (keys["s"] || keys["S"]) {
+    const s = Math.max(cube.scale.x - 0.01, 0.1);
+    cube.scale.set(s, s, s);
+  }
+
+  // Sombra sigue al cubo
+  sombra.position.x = cube.position.x;
+  sombra.position.z = cube.position.z;
+  sombra.scale.setScalar(cube.scale.x);
+
+  // Luces orbitando
+  luz1.position.x = Math.cos(t * 0.5) * 6;
+  luz1.position.z = Math.sin(t * 0.5) * 6;
+  luz2.position.x = Math.cos(t * 0.4 + Math.PI) * 5;
+  luz2.position.z = Math.sin(t * 0.4 + Math.PI) * 5;
+
+  // HUD
+  elPx.textContent = cube.position.x.toFixed(2);
+  elPy.textContent = cube.position.y.toFixed(2);
+  elRy.textContent = (cube.rotation.y % (Math.PI * 2)).toFixed(2);
+  elSc.textContent = cube.scale.x.toFixed(2);
+
+  renderer.render(scene, camera);
+}
+
+animate();
+</script>
+</body>
+</html>

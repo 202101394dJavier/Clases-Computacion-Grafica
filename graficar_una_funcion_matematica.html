@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gráfico de Líneas Dinámico</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0a0a1a;
+      font-family: sans-serif;
+    }
+
+    h2 {
+      color: #AFA9EC;
+      font-weight: 400;
+      font-size: 14px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin: 0 0 16px;
+    }
+
+    canvas {
+      border-radius: 14px;
+      border: 1px solid rgba(175,169,236,0.25);
+      display: block;
+    }
+
+    #ui {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-top: 14px;
+      background: rgba(255,255,255,0.06);
+      padding: 10px 24px;
+      border-radius: 20px;
+    }
+
+    #ui label { font-size: 12px; color: rgba(255,255,255,0.45); }
+    #ui span  { font-size: 12px; color: rgba(255,255,255,0.85); min-width: 24px; }
+
+    button {
+      font-size: 12px;
+      padding: 5px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(175,169,236,0.45);
+      background: transparent;
+      color: #AFA9EC;
+      cursor: pointer;
+    }
+    button:hover { background: rgba(175,169,236,0.12); }
+  </style>
+</head>
+<body>
+
+<h2>Gráfico de Líneas Dinámico</h2>
+<canvas id="canvas" width="620" height="400"></canvas>
+
+<div id="ui">
+  <label>Velocidad</label>
+  <input type="range" min="1" max="20" value="5" id="vel">
+  <span id="vel-out">5</span>
+
+  <label>Amplitud</label>
+  <input type="range" min="20" max="180" value="100" id="amp">
+  <span id="amp-out">100</span>
+
+  <label>Función</label>
+  <select id="func">
+    <option value="sin">sin(x)</option>
+    <option value="cos">cos(x)</option>
+    <option value="tan">tan(x)</option>
+    <option value="sincos">sin + cos</option>
+  </select>
+
+  <button id="btnPause">Pausar</button>
+</div>
+
+<script>
+  const canvas = document.getElementById("canvas");
+  const ctx    = canvas.getContext("2d");
+  const W = canvas.width;
+  const H = canvas.height;
+  const CX = W / 2;
+  const CY = H / 2;
+
+  let t        = 0;
+  let pausado  = false;
+  let vel      = 0.05;
+  let amp      = 100;
+  let funcion  = "sin";
+
+  document.getElementById("vel").addEventListener("input", e => {
+    vel = parseFloat(e.target.value) * 0.01;
+    document.getElementById("vel-out").textContent = e.target.value;
+  });
+  document.getElementById("amp").addEventListener("input", e => {
+    amp = parseFloat(e.target.value);
+    document.getElementById("amp-out").textContent = e.target.value;
+  });
+  document.getElementById("func").addEventListener("change", e => {
+    funcion = e.target.value;
+  });
+  document.getElementById("btnPause").addEventListener("click", function() {
+    pausado = !pausado;
+    this.textContent = pausado ? "Reanudar" : "Pausar";
+  });
+
+  function calcY(x) {
+    const arg = (x * 0.02) + t;
+    switch(funcion) {
+      case "cos":    return amp * Math.cos(arg);
+      case "tan":    return Math.max(-amp, Math.min(amp, amp * 0.3 * Math.tan(arg)));
+      case "sincos": return (amp * 0.6) * (Math.sin(arg) + Math.cos(arg * 1.5));
+      default:       return amp * Math.sin(arg);
+    }
+  }
+
+  function dibujar() {
+    // Fondo con rastro
+    ctx.fillStyle = "rgba(13, 13, 32, 0.4)";
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid menor
+    ctx.strokeStyle = "rgba(255,255,255,0.04)";
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= W; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y <= H; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+
+    // Ejes
+    ctx.strokeStyle = "rgba(175,169,236,0.5)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, CY); ctx.lineTo(W, CY);
+    ctx.moveTo(CX, 0); ctx.lineTo(CX, H);
+    ctx.stroke();
+
+    // Flechas ejes
+    function flecha(x, y, dir) {
+      ctx.beginPath();
+      if (dir === "r") {
+        ctx.moveTo(x, y); ctx.lineTo(x-8, y-4); ctx.lineTo(x-8, y+4);
+      } else {
+        ctx.moveTo(x, y); ctx.lineTo(x-4, y+8); ctx.lineTo(x+4, y+8);
+      }
+      ctx.closePath();
+      ctx.fillStyle = "rgba(175,169,236,0.5)";
+      ctx.fill();
+    }
+    flecha(W-2, CY, "r");
+    flecha(CX, 2, "u");
+
+    // Etiquetas ejes
+    ctx.fillStyle = "rgba(175,169,236,0.6)";
+    ctx.font = "12px sans-serif";
+    ctx.fillText("x", W-18, CY-10);
+    ctx.fillText("y", CX+10, 16);
+    ctx.fillText("0", CX+5, CY-6);
+
+    // Marcas
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.font = "10px sans-serif";
+    ctx.textAlign = "center";
+    [-200,-100,100,200].forEach(v => ctx.fillText(v, CX+v, CY+14));
+    ctx.textAlign = "left";
+
+    // ── Halo exterior ───────────────────────────────────
+    ctx.beginPath();
+    for (let x = 0; x < W; x++) {
+      const y = calcY(x);
+      x === 0 ? ctx.moveTo(x, CY-y) : ctx.lineTo(x, CY-y);
+    }
+    ctx.strokeStyle = "rgba(127,119,221,0.2)";
+    ctx.lineWidth = 8;
+    ctx.lineJoin = "round";
+    ctx.stroke();
+
+    // ── Curva principal con gradiente ───────────────────
+    const grad = ctx.createLinearGradient(0, 0, W, 0);
+    grad.addColorStop(0,    "#534AB7");
+    grad.addColorStop(0.33, "#5DCAA5");
+    grad.addColorStop(0.66, "#9b8fff");
+    grad.addColorStop(1,    "#534AB7");
+
+    ctx.beginPath();
+    for (let x = 0; x < W; x++) {
+      const y = calcY(x);
+      x === 0 ? ctx.moveTo(x, CY-y) : ctx.lineTo(x, CY-y);
+    }
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // ── Punto móvil en CX ───────────────────────────────
+    const yPunto = calcY(CX);
+    ctx.beginPath();
+    ctx.arc(CX, CY - yPunto, 5, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+    ctx.strokeStyle = "#5DCAA5";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Valor en pantalla
+    ctx.fillStyle = "rgba(255,255,255,0.6)";
+    ctx.font = "11px sans-serif";
+    const label = funcion === "sincos" ? "f(t)" : `${funcion}(t)`;
+    ctx.fillText(`${label} = ${(yPunto/amp).toFixed(3)}`, CX+10, CY-yPunto-10);
+
+    // Etiqueta función activa
+    ctx.fillStyle = "rgba(127,119,221,0.8)";
+    ctx.font = "12px sans-serif";
+    ctx.fillText(`y = ${funcion === "sincos" ? "sin(x)+cos(1.5x)" : funcion+"(x+t)"}`, 16, 24);
+
+    if (!pausado) t += vel;
+    requestAnimationFrame(dibujar);
+  }
+
+  // Fondo inicial
+  ctx.fillStyle = "#0d0d20";
+  ctx.fillRect(0, 0, W, H);
+
+  dibujar();
+</script>
+</body>
+</html>

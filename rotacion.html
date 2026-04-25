@@ -33,7 +33,6 @@ button {
   font-family: sans-serif;
 }
 button:hover { background: rgba(175,169,236,0.12); }
-
 #titulo {
   position: fixed;
   top: 20px;
@@ -49,47 +48,28 @@ button:hover { background: rgba(175,169,236,0.12); }
 </style>
 </head>
 <body>
-
 <div id="titulo">Rotación 3D</div>
-
 <div id="ui">
   <label>Velocidad</label>
   <input type="range" min="1" max="20" value="5" id="vel">
   <span id="vel-out">5</span>
-
-  <label>Figura</label>
-  <select id="figura">
-    <option value="cubo">Cubo</option>
-    <option value="esfera">Esfera</option>
-    <option value="toroide">Toroide</option>
-    <option value="icosaedro">Icosaedro</option>
-    <option value="octaedro">Octaedro</option>
-  </select>
-
   <button id="btnPause">Pausar</button>
 </div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// ── Escena ───────────────────────────────────────────────
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0a0a1a);
-
-// Niebla sutil
 scene.fog = new THREE.FogExp2(0x0a0a1a, 0.08);
 
-// ── Cámara ───────────────────────────────────────────────
 const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 1000);
 camera.position.set(0, 0.5, 5);
 
-// ── Renderer ─────────────────────────────────────────────
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(devicePixelRatio);
 renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
-// ── Luces ────────────────────────────────────────────────
 scene.add(new THREE.AmbientLight(0x222244, 1));
 
 const luz1 = new THREE.PointLight(0x7F77DD, 3, 20);
@@ -105,23 +85,14 @@ const luz3 = new THREE.PointLight(0xffffff, 0.8, 15);
 luz3.position.set(0, 5, -2);
 scene.add(luz3);
 
-// ── Plataforma ───────────────────────────────────────────
 const plat = new THREE.Mesh(
   new THREE.CylinderGeometry(1.8, 1.8, 0.08, 64),
-  new THREE.MeshPhongMaterial({
-    color: 0x1a1a3a,
-    emissive: 0x0a0a20,
-    specular: 0x7F77DD,
-    shininess: 60,
-    transparent: true,
-    opacity: 0.7
-  })
+  new THREE.MeshPhongMaterial({ color: 0x1a1a3a, emissive: 0x0a0a20, specular: 0x7F77DD, shininess: 60, transparent: true, opacity: 0.7 })
 );
 plat.position.y = -1.8;
 plat.receiveShadow = true;
 scene.add(plat);
 
-// Anillo decorativo
 const ring = new THREE.Mesh(
   new THREE.TorusGeometry(1.85, 0.025, 8, 64),
   new THREE.MeshPhongMaterial({ color: 0x7F77DD, emissive: 0x3a2a8a })
@@ -130,52 +101,24 @@ ring.rotation.x = Math.PI / 2;
 ring.position.y = -1.76;
 scene.add(ring);
 
-// ── Material principal ───────────────────────────────────
-function crearMaterial() {
-  return new THREE.MeshPhongMaterial({
-    color: 0x7F77DD,
-    emissive: 0x2a1a6e,
-    specular: 0xffffff,
-    shininess: 90,
-  });
-}
-
-// ── Geometrías ───────────────────────────────────────────
-function crearGeo(tipo) {
-  switch(tipo) {
-    case "esfera":    return new THREE.SphereGeometry(0.9, 48, 48);
-    case "toroide":   return new THREE.TorusGeometry(0.75, 0.32, 24, 80);
-    case "icosaedro": return new THREE.IcosahedronGeometry(0.95, 0);
-    case "octaedro":  return new THREE.OctahedronGeometry(1.0);
-    default:          return new THREE.BoxGeometry(1.4, 1.4, 1.4);
-  }
-}
-
-let mesh = new THREE.Mesh(crearGeo("cubo"), crearMaterial());
+const geo = new THREE.BoxGeometry(1.4, 1.4, 1.4);
+const mat = new THREE.MeshPhongMaterial({ color: 0x7F77DD, emissive: 0x2a1a6e, specular: 0xffffff, shininess: 90 });
+const mesh = new THREE.Mesh(geo, mat);
 mesh.castShadow = true;
+const aristas = new THREE.LineSegments(
+  new THREE.EdgesGeometry(geo),
+  new THREE.LineBasicMaterial({ color: 0xAFA9EC, transparent: true, opacity: 0.5 })
+);
+mesh.add(aristas);
 scene.add(mesh);
 
-// Aristas
-function crearAristas(geo) {
-  return new THREE.LineSegments(
-    new THREE.EdgesGeometry(geo),
-    new THREE.LineBasicMaterial({ color: 0xAFA9EC, transparent: true, opacity: 0.5 })
-  );
-}
-let aristas = crearAristas(mesh.geometry);
-mesh.add(aristas);
-
-// ── Estrellas de fondo ───────────────────────────────────
 const starGeo = new THREE.BufferGeometry();
 const starPos = new Float32Array(600 * 3);
 for (let i = 0; i < 600 * 3; i++) starPos[i] = (Math.random() - 0.5) * 80;
 starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
-const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
-  color: 0xffffff, size: 0.08, transparent: true, opacity: 0.6
-}));
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.08, transparent: true, opacity: 0.6 }));
 scene.add(stars);
 
-// ── Partículas orbitales ──────────────────────────────────
 const partGeo = new THREE.BufferGeometry();
 const partPos = new Float32Array(80 * 3);
 for (let i = 0; i < 80; i++) {
@@ -186,31 +129,15 @@ for (let i = 0; i < 80; i++) {
   partPos[i*3+2] = Math.sin(ang) * rad;
 }
 partGeo.setAttribute("position", new THREE.BufferAttribute(partPos, 3));
-const particulas = new THREE.Points(partGeo, new THREE.PointsMaterial({
-  color: 0x5DCAA5, size: 0.06, transparent: true, opacity: 0.7
-}));
+const particulas = new THREE.Points(partGeo, new THREE.PointsMaterial({ color: 0x5DCAA5, size: 0.06, transparent: true, opacity: 0.7 }));
 scene.add(particulas);
 
-// ── Controles ─────────────────────────────────────────────
 let velocidad = 0.01;
-let pausado   = false;
+let pausado = false;
 
 document.getElementById("vel").addEventListener("input", e => {
   velocidad = parseFloat(e.target.value) * 0.002;
   document.getElementById("vel-out").textContent = e.target.value;
-});
-
-document.getElementById("figura").addEventListener("change", e => {
-  const tipo = e.target.value;
-  mesh.remove(aristas);
-  scene.remove(mesh);
-
-  const geo = crearGeo(tipo);
-  mesh = new THREE.Mesh(geo, crearMaterial());
-  mesh.castShadow = true;
-  aristas = crearAristas(geo);
-  mesh.add(aristas);
-  scene.add(mesh);
 });
 
 document.getElementById("btnPause").addEventListener("click", function() {
@@ -218,45 +145,30 @@ document.getElementById("btnPause").addEventListener("click", function() {
   this.textContent = pausado ? "Reanudar" : "Pausar";
 });
 
-// Redimensionar
 window.addEventListener("resize", () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
 
-// ── Animación ────────────────────────────────────────────
 let t = 0;
-
 function animate() {
   requestAnimationFrame(animate);
   t += 0.01;
-
   if (!pausado) {
-    // Rotación principal (igual que el original)
     mesh.rotation.x += velocidad;
     mesh.rotation.y += velocidad;
-
-    // Luces orbitando
     luz1.position.x = Math.cos(t * 0.7) * 5;
     luz1.position.z = Math.sin(t * 0.7) * 5;
     luz2.position.x = Math.cos(t * 0.5 + Math.PI) * 4;
     luz2.position.z = Math.sin(t * 0.5 + Math.PI) * 4;
-
-    // Partículas girando
     particulas.rotation.y += velocidad * 0.4;
-
-    // Anillo pulsando
     const s = 1 + Math.sin(t * 2) * 0.03;
     ring.scale.set(s, 1, s);
-
-    // Estrellas rotando lento
     stars.rotation.y += 0.0003;
   }
-
   renderer.render(scene, camera);
 }
-
 animate();
 </script>
 </body>

@@ -2,416 +2,252 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>COMPUTACION GRAFICA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Computación Gráfica</title>
 <style>
-* { box-sizing: border-box; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  color: white;
-  text-align: center;
-  overflow-x: hidden;
   background: #0a0000;
+  font-family: Arial, sans-serif;
+  color: #fff;
+  min-height: 100vh;
 }
 
-/* Fondo con partículas */
-#bg-canvas {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  z-index: 0;
-  pointer-events: none;
+/* HERO */
+.hero {
+  border-bottom: 1px solid rgba(200,20,20,0.25);
+  padding: 40px 32px 32px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
 }
-
-.contenido {
-  position: relative;
-  z-index: 1;
-}
-
-/* HEADER */
-header {
-  padding: 50px 20px 20px;
-}
-
-header h1 {
-  font-size: 36px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #ffffff;
-  margin: 0 0 8px;
-  text-shadow: 0 0 30px rgba(220,20,20,0.6);
-}
-
-header h2 {
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
-  margin: 0;
-}
-
-.linea-roja {
-  width: 60px;
-  height: 3px;
+.hero-bar {
+  width: 4px;
+  height: 64px;
   background: #cc1111;
   border-radius: 2px;
-  margin: 16px auto 0;
+  flex-shrink: 0;
+}
+.hero-text h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  margin: 0 0 4px;
+}
+.hero-text p {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.hero-dot {
+  margin-left: auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #cc1111;
+  box-shadow: 0 0 0 4px rgba(200,20,20,0.2);
 }
 
 /* SECCIONES */
-.seccion {
-  background: rgba(255,255,255,0.03);
-  margin: 28px 24px;
-  padding: 28px 24px;
-  border-radius: 16px;
-  border: 1px solid rgba(200,20,20,0.2);
-  backdrop-filter: blur(8px);
+.section { padding: 32px 32px 0; }
+
+.sec-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.sec-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: #cc1111;
+  border: 1px solid rgba(200,20,20,0.4);
+  padding: 3px 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.sec-name {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.sec-hr {
+  flex: 1;
+  height: 1px;
+  background: rgba(200,20,20,0.15);
 }
 
-.seccion-titulo {
+/* LISTA */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.item {
+  display: flex;
+  align-items: center;
+  background: #0e0000;
+  border: 1px solid rgba(200,20,20,0.15);
+  transition: border-color 0.2s, background 0.2s;
+}
+.item:hover {
+  background: #150000;
+  border-color: rgba(200,20,20,0.45);
+}
+.item-num {
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  margin-bottom: 28px;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(200,20,20,0.5);
+  letter-spacing: 0.1em;
+  border-right: 1px solid rgba(200,20,20,0.15);
+  flex-shrink: 0;
 }
-
-.seccion-titulo h2 {
+.item-name {
+  flex: 1;
+  padding: 0 16px;
   font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.7);
-  margin: 0;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.03em;
 }
-
-.badge {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: #cc1111;
-  background: rgba(200,20,20,0.12);
-  border: 1px solid rgba(200,20,20,0.35);
-  border-radius: 20px;
-  padding: 4px 12px;
-  text-transform: uppercase;
-}
-
-/* CONTENEDOR */
-.contenedor {
+.item-btn {
+  padding: 0 18px;
+  height: 44px;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-}
-
-/* TARJETAS */
-.card {
-  position: relative;
-  width: 210px;
-  padding: 28px 20px 22px;
-  border-radius: 14px;
-  cursor: pointer;
-  background: #110000;
-  border: 1px solid rgba(200,20,20,0.25);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-  transform-style: preserve-3d;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  overflow: hidden;
-}
-
-/* esquina decorativa */
-.card::after {
-  content: "";
-  position: absolute;
-  top: 0; right: 0;
-  width: 40px; height: 40px;
-  background: rgba(200,20,20,0.18);
-  clip-path: polygon(100% 0, 0 0, 100% 100%);
-  border-radius: 0 14px 0 0;
-}
-
-/* brillo al hover */
-.card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 14px;
-  background: radial-gradient(circle at var(--x,50%) var(--y,50%), rgba(200,20,20,0.18), transparent 65%);
-  opacity: 0;
-  transition: opacity 0.25s;
-}
-
-.card:hover::before { opacity: 1; }
-
-.card:hover {
-  border-color: rgba(200,20,20,0.6);
-  box-shadow: 0 12px 40px rgba(180,0,0,0.3);
-}
-
-/* Número decorativo */
-.card-num {
-  position: absolute;
-  top: 10px;
-  left: 16px;
+  align-items: center;
   font-size: 10px;
-  font-weight: 700;
-  color: rgba(200,20,20,0.4);
-  letter-spacing: 0.1em;
-}
-
-.card h3 {
-  font-size: 15px;
-  font-weight: 500;
-  color: #ffffff;
-  margin: 0 0 20px;
-  letter-spacing: 0.04em;
-  transform: translateZ(20px);
-}
-
-/* Línea bajo título */
-.card-line {
-  width: 30px;
-  height: 2px;
-  background: #cc1111;
-  border-radius: 1px;
-  margin: -16px auto 18px;
-}
-
-/* BOTÓN */
-.boton {
-  display: inline-block;
-  padding: 8px 22px;
-  background: transparent;
-  color: #ffffff;
-  text-decoration: none;
-  border-radius: 8px;
-  border: 1px solid rgba(200,20,20,0.5);
-  font-size: 12px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
-  transform: translateZ(20px);
+  color: rgba(200,20,20,0.7);
+  text-decoration: none;
+  border-left: 1px solid rgba(200,20,20,0.15);
+  transition: color 0.2s, background 0.2s;
 }
-
-.boton:hover {
-  background: rgba(200,20,20,0.2);
-  border-color: #cc1111;
-  box-shadow: 0 0 16px rgba(200,20,20,0.3);
-}
-
-/* CURSOR LUZ */
-.cursor-luz {
-  position: fixed;
-  width: 220px;
-  height: 220px;
-  background: radial-gradient(circle, rgba(200,20,20,0.12) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  z-index: 0;
+.item:hover .item-btn {
+  color: #ff4444;
+  background: rgba(200,20,20,0.08);
 }
 
 /* FOOTER */
 footer {
-  padding: 30px;
-  font-size: 11px;
+  margin: 40px 32px 0;
+  padding-top: 20px;
+  border-top: 1px solid rgba(200,20,20,0.12);
+  font-size: 10px;
   color: rgba(255,255,255,0.15);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  text-align: center;
+  padding-bottom: 32px;
 }
 </style>
 </head>
-
 <body>
 
-<canvas id="bg-canvas"></canvas>
-
-<div class="contenido">
-
-  <header>
-    <h1>Computación Gráfica</h1>
-    <h2>Javier Reyes Arias</h2>
-    <div class="linea-roja"></div>
-  </header>
+  <!-- HEADER -->
+  <div class="hero">
+    <div class="hero-bar"></div>
+    <div class="hero-text">
+      <h1>Computación Gráfica</h1>
+      <p>Javier Reyes Arias</p>
+    </div>
+    <div class="hero-dot"></div>
+  </div>
 
   <!-- ACTIVIDAD EN CLASE -->
-  <div class="seccion">
-    <div class="seccion-titulo">
-      <span class="badge">Clase</span>
-      <h2>Actividad en Clase</h2>
+  <div class="section">
+    <div class="sec-row">
+      <span class="sec-tag">Clase</span>
+      <span class="sec-name">Actividad en Clase</span>
+      <div class="sec-hr"></div>
     </div>
-    <div class="contenedor">
-
-      <div class="card">
-        <span class="card-num">01</span>
-        <h3>Cuadrado y Triángulo</h3>
-        <div class="card-line"></div>
-        <a href="figura_circular.html" class="boton">Ver</a>
+    <div class="list">
+      <div class="item">
+        <div class="item-num">01</div>
+        <div class="item-name">Cuadrado y Triángulo</div>
+        <a href="figura_circular.html" class="item-btn">Ver →</a>
       </div>
-
-      <div class="card">
-        <span class="card-num">02</span>
-        <h3>Funciones X Y</h3>
-        <div class="card-line"></div>
-        <a href="funciones_de_x_y_y.html" class="boton">Ver</a>
+      <div class="item">
+        <div class="item-num">02</div>
+        <div class="item-name">Funciones X Y</div>
+        <a href="funciones_de_x_y_y.html" class="item-btn">Ver →</a>
       </div>
-
-      <div class="card">
-        <span class="card-num">03</span>
-        <h3>Gráfico de Barras</h3>
-        <div class="card-line"></div>
-        <a href="GRAFICOBARAS.HTML" class="boton">Ver</a>
+      <div class="item">
+        <div class="item-num">03</div>
+        <div class="item-name">Gráfico de Barras</div>
+        <a href="GRAFICOBARAS.HTML" class="item-btn">Ver →</a>
       </div>
-
-      <div class="card">
-        <span class="card-num">04</span>
-        <h3>Función Matemática</h3>
-        <div class="card-line"></div>
-        <a href="graficar_una_funcion_matematica.html" class="boton">Ver</a>
+      <div class="item">
+        <div class="item-num">04</div>
+        <div class="item-name">Función Matemática</div>
+        <a href="graficar_una_funcion_matematica.html" class="item-btn">Ver →</a>
       </div>
-
     </div>
   </div>
 
   <!-- ACTIVIDAD 4 -->
-  <div class="seccion">
-    <div class="seccion-titulo">
-      <span class="badge">Act. 4</span>
-      <h2>Actividad 4</h2>
+  <div class="section">
+    <div class="sec-row">
+      <span class="sec-tag">Act. 4</span>
+      <span class="sec-name">Actividad 4</span>
+      <div class="sec-hr"></div>
     </div>
-    <div class="contenedor">
-
-      <div class="card">
-        <span class="card-num">01</span>
-        <h3>Barras Dinámicas</h3>
-        <div class="card-line"></div>
-        <a href="GRÁFICO DE BARRAS DINÁMICO.html" class="boton">Ver</a>
+    <div class="list">
+      <div class="item">
+        <div class="item-num">01</div>
+        <div class="item-name">Barras Dinámicas</div>
+        <a href="GRÁFICO DE BARRAS DINÁMICO.html" class="item-btn">Ver →</a>
       </div>
-
-      <div class="card">
-        <span class="card-num">02</span>
-        <h3>Puntos en Movimiento</h3>
-        <div class="card-line"></div>
-        <a href="Gráfico de Puntos en Movimiento.html" class="boton">Ver</a>
+      <div class="item">
+        <div class="item-num">02</div>
+        <div class="item-name">Puntos en Movimiento</div>
+        <a href="Gráfico de Puntos en Movimiento.html" class="item-btn">Ver →</a>
       </div>
-
-      <div class="card">
-        <span class="card-num">03</span>
-        <h3>Curva cos(x)</h3>
-        <div class="card-line"></div>
-        <a href="Curva Dinámica de la Función Coseno.html" class="boton">Ver</a>
+      <div class="item">
+        <div class="item-num">03</div>
+        <div class="item-name">Curva cos(x)</div>
+        <a href="Curva Dinámica de la Función Coseno.html" class="item-btn">Ver →</a>
       </div>
-
     </div>
   </div>
 
   <!-- ACTIVIDAD 5 -->
-  <div class="seccion">
-    <div class="seccion-titulo">
-      <span class="badge">Act. 5</span>
-      <h2>Actividad 5</h2>
+  <div class="section">
+    <div class="sec-row">
+      <span class="sec-tag">Act. 5</span>
+      <span class="sec-name">Actividad 5</span>
+      <div class="sec-hr"></div>
     </div>
-    <div class="contenedor">
-
-      <div class="card">
-        <span class="card-num">01</span>
-        <h3>Traslación</h3>
-        <div class="card-line"></div>
-        <a href="traslacion movimiento x.html" class="boton">Ver</a>
+    <div class="list">
+      <div class="item">
+        <div class="item-num">01</div>
+        <div class="item-name">Traslación</div>
+        <a href="traslacion movimiento x.html" class="item-btn">Ver →</a>
       </div>
-
-      <div class="card">
-        <span class="card-num">02</span>
-        <h3>Rotación</h3>
-        <div class="card-line"></div>
-        <a href="rotacion.html" class="boton">Ver</a>
+      <div class="item">
+        <div class="item-num">02</div>
+        <div class="item-name">Rotación</div>
+        <a href="rotacion.html" class="item-btn">Ver →</a>
       </div>
-
-      <div class="card">
-        <span class="card-num">03</span>
-        <h3>Transformaciones</h3>
-        <div class="card-line"></div>
-        <a href="TRANSFORMACIONES INTERACTIVAS.html" class="boton">Ver</a>
+      <div class="item">
+        <div class="item-num">03</div>
+        <div class="item-name">Transformaciones</div>
+        <a href="TRANSFORMACIONES INTERACTIVAS.html" class="item-btn">Ver →</a>
       </div>
-
     </div>
   </div>
 
   <footer>© 2025 · Javier Julian Reyes Arias · Computación Gráfica</footer>
-
-</div>
-
-<!-- Cursor luz -->
-<div class="cursor-luz" id="luz"></div>
-
-<script>
-// ── Partículas de fondo ──────────────────────────────────
-const bgCanvas = document.getElementById("bg-canvas");
-const bgCtx    = bgCanvas.getContext("2d");
-
-function resizeBg() {
-  bgCanvas.width  = window.innerWidth;
-  bgCanvas.height = window.innerHeight;
-}
-resizeBg();
-window.addEventListener("resize", resizeBg);
-
-const particulas = Array.from({ length: 55 }, () => ({
-  x:    Math.random() * window.innerWidth,
-  y:    Math.random() * window.innerHeight,
-  r:    Math.random() * 1.5 + 0.4,
-  vx:   (Math.random() - 0.5) * 0.3,
-  vy:   (Math.random() - 0.5) * 0.3,
-  op:   Math.random() * 0.4 + 0.1
-}));
-
-function animarBg() {
-  bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
-  particulas.forEach(p => {
-    p.x += p.vx; p.y += p.vy;
-    if (p.x < 0) p.x = bgCanvas.width;
-    if (p.x > bgCanvas.width)  p.x = 0;
-    if (p.y < 0) p.y = bgCanvas.height;
-    if (p.y > bgCanvas.height) p.y = 0;
-
-    bgCtx.beginPath();
-    bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    bgCtx.fillStyle = `rgba(200,20,20,${p.op})`;
-    bgCtx.fill();
-  });
-  requestAnimationFrame(animarBg);
-}
-animarBg();
-
-// ── Cursor luz ───────────────────────────────────────────
-const luz = document.getElementById("luz");
-document.addEventListener("mousemove", e => {
-  luz.style.left = e.clientX + "px";
-  luz.style.top  = e.clientY + "px";
-});
-
-// ── Tarjetas 3D ──────────────────────────────────────────
-document.querySelectorAll(".card").forEach(card => {
-  card.addEventListener("mousemove", e => {
-    const r  = card.getBoundingClientRect();
-    const x  = e.clientX - r.left;
-    const y  = e.clientY - r.top;
-    const rx = -((y - r.height / 2) / 12);
-    const ry =  (x - r.width  / 2) / 12;
-    card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) translateZ(4px)`;
-    card.style.setProperty("--x", x + "px");
-    card.style.setProperty("--y", y + "px");
-  });
-
-  card.addEventListener("mouseleave", () => {
-    card.style.transform = "rotateX(0) rotateY(0) translateZ(0)";
-  });
-});
-</script>
 
 </body>
 </html>
